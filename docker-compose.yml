@@ -1,0 +1,37 @@
+# docker-compose.yml
+
+version: '3.8'
+
+services:
+  # The PostgreSQL Database Service
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=0000
+      - POSTGRES_DB=linkedin_analytics
+    ports:
+      - "5432:5432" # Map host port to container port for external access
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # The FastAPI Application Service
+  api:
+    build: . # Build the image from the Dockerfile in the current directory
+    volumes:
+      - ./app:/app/app # Mount local app directory for live code changes
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env # Pass environment variables from the .env file
+    depends_on:
+      db:
+        condition: service_healthy # Wait for the DB to be ready before starting
+
+volumes:
+  postgres_data:
