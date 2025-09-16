@@ -1,0 +1,148 @@
+# LinkedIn Analytics Backend (FastAPI + PostgreSQL)
+
+This project is a backend system built with FastAPI and PostgreSQL that powers a simplified LinkedIn analytics platform. The focus is on robust database design, modern API handling, background task scheduling, and professional development practices using Docker.
+
+## Features
+
+-   **User Management:** JWT-based authentication with distinct roles (Admin, User).
+-   **Post Management:** Full CRUD (Create, Read, Update, Delete) APIs for posts.
+-   **Advanced Filtering:** Retrieve posts with filters by user, time range, etc.
+-   **Post Analytics:**
+    -   Store and calculate multiple reaction types (`like`, `praise`, `empathy`, etc.).
+    -   Calculate key engagement metrics (total reactions, impressions, shares, comments).
+    -   Provide APIs to fetch post-wise analytics and top-engaging posts.
+-   **Internal Post Scheduling:** A background service that simulates publishing scheduled posts.
+-   **Database & Migrations:** Leverages SQLAlchemy for ORM and Alembic for safe, repeatable database schema migrations.
+-   **Containerized Environment:** Fully containerized with Docker and Docker Compose for a consistent, portable, and easy-to-manage development environment.
+
+## Tech Stack
+
+-   **Backend:** Python 3.11
+-   **Framework:** FastAPI
+-   **Database:** PostgreSQL
+-   **ORM:** SQLAlchemy
+-   **Migrations:** Alembic
+-   **Data Validation:** Pydantic
+-   **Containerization:** Docker & Docker Compose
+
+## Project Structure
+
+```
+linkedin_analytics/
+├── app/                  # Main application source code
+│   ├── api/              # API endpoints, dependencies
+│   ├── core/             # Configuration, security settings
+│   ├── crud/             # CRUD database operations
+│   ├── db/               # Database session management, models base
+│   ├── models/           # SQLAlchemy ORM models
+│   ├── schemas/          # Pydantic data validation schemas
+│   └── services/         # Background services (e.g., post scheduler)
+├── alembic/              # Alembic migration scripts
+├── .env                  # Environment variables (secret keys, DB URL)
+├── alembic.ini           # Alembic configuration
+├── admin_user_script.py # Script to create the initial admin user
+├── docker-compose.yml    # Defines the Docker services (api, db)
+├── Dockerfile            # Blueprint for building the FastAPI app image
+└── README.md             # This file
+```
+
+## Getting Started
+
+### Prerequisites
+
+-   [Docker](https://www.docker.com/get-started)
+-   [Docker Compose](https://docs.docker.com/compose/install/) (usually included with Docker Desktop)
+
+### 1. Clone the Repository
+
+```bash
+git clone <your-repository-url>
+cd <repository-folder>
+```
+
+### 2. Create the Environment File
+
+Create a file named `.env` in the root of the project. Copy the contents of the example below into it.
+
+**.env file:**
+```.env
+# This URL uses the service name 'db' which is defined in docker-compose.yml
+# It will only work when running inside the Docker container.
+DATABASE_URL="postgresql://postgres:0000@db/linkedin_analytics"
+
+# Generate a new secret key for a real project
+# openssl rand -hex 32
+SECRET_KEY="a_very_secret_key"
+ALGORITHM="HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+```
+
+---
+
+## Running the Application (Docker Workflow)
+
+This project is designed to be run entirely within Docker.
+
+### First-Time Setup
+
+If you are running this project for the first time, follow these steps to initialize everything.
+
+**1. Tear Down (Optional, but recommended for a clean start):**
+This command stops any running containers and deletes the old database volume.
+```bash
+docker-compose down -v
+```
+
+**2. Create the Initial Migration Blueprint:**
+This command starts the database, runs a temporary `api` container to inspect your models, creates the initial migration script, and then stops.
+```bash
+# Start only the database service
+docker-compose up -d db
+
+# Run the autogenerate command to create the migration file
+docker-compose run --rm api alembic revision --autogenerate -m "Initial database schema"
+```
+You will see a new file appear in `alembic/versions/`.
+
+**3. Build and Start the Full Application:**
+This command builds the `api` image and starts all services. The `api` service will automatically find the migration file and apply it to the database on startup.
+```bash
+docker-compose up -d --build
+```
+
+**4. Create the First Admin User:**
+The API is now running, but the database has no users. Run this command to execute the script that creates your first admin.
+```bash
+docker-compose exec api python create_first_admin.py
+```
+> Default Admin Credentials:
+> - **Username:** `admin`
+> - **Password:** `adminpassword` (as defined in the script)
+
+### Daily Use
+
+Once the initial setup is complete, you will only need these commands for daily development.
+
+-   **Start the application:**
+    ```bash
+    docker-compose up -d
+    ```
+
+-   **Stop the application:**
+    ```bash
+    docker-compose down
+    ```
+
+-   **View application logs:**
+    ```bash
+    docker-compose logs -f api
+    ```
+
+## API Endpoints
+
+The API is self-documenting thanks to FastAPI. Once the application is running, access the interactive Swagger UI at:
+
+**[http://localhost:8000/docs](http://localhost:8000/docs)**
+
+From this interface, you can view all available endpoints, see their required parameters, and test them directly from your browser.
+
