@@ -32,6 +32,10 @@ services:
     depends_on:
       db:
         condition: service_healthy # Wait for the DB to be ready before starting
-
+    command: 
+      sh -c "alembic revision --autogenerate -m 'Auto-generated migration' && 
+             sleep 2 &&
+             alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000"
 volumes:
   postgres_data:
