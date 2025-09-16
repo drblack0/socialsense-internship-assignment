@@ -3,8 +3,6 @@
 FROM python:3.11-slim
 WORKDIR /app
 
-# No need for dos2unix anymore
-# RUN apt-get update && apt-get install -y dos2unix
 
 COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
