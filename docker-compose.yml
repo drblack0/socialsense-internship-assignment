@@ -36,6 +36,7 @@ services:
       sh -c "alembic revision --autogenerate -m 'Auto-generated migration' && 
              sleep 2 &&
              alembic upgrade head &&
+             python create_first_admin.py &&
              uvicorn app.main:app --host 0.0.0.0 --port 8000"
 volumes:
   postgres_data:
